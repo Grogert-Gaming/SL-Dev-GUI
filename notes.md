@@ -5,7 +5,9 @@ server:
 	stop
 	restart
 	status box
+		"Server starting..."
 		"Server running..."
+		"Server stopping..."
 		"Server stopped..."
 		"Server restarting..."
 		"Error. Check logs."

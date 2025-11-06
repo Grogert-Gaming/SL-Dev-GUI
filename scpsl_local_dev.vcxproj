@@ -148,12 +148,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ManagerFrame.cpp" />
+    <ClCompile Include="ManagerFrame.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="notes.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="diagram.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="macros.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
