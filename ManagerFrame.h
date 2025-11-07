@@ -46,6 +46,9 @@ private:
 	// Modify the state of the GUI elements
 	void LoadConfig();
 	void SaveConfig();
+
+	// Extras
+	wxStandardID GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl);
 };
 
 #endif // MANAGER_FRAME_H

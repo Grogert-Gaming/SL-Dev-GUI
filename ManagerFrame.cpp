@@ -1,7 +1,8 @@
 #include "ManagerFrame.h"
 
 ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
-	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(700, 600)) {
+	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(700, 600), 
+	wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX) {
 	// Initialize panel and box model
 	wxPanel* pnlMain = new wxPanel(this);
 	wxBoxSizer* szrMain = new wxBoxSizer(wxHORIZONTAL);
@@ -11,14 +12,20 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	wxBoxSizer* szrLeft = new wxBoxSizer(wxVERTICAL);
 
 	wxBoxSizer* szrProjDir = new wxBoxSizer(wxHORIZONTAL);
-	txtProjDir = new wxTextCtrl(pnlLeft, wxID_ANY, "Selected Plugin");
+	wxStaticText* lblProjDir = new wxStaticText(pnlLeft, wxID_ANY, "Plugin Path:");
+	txtProjDir = new wxTextCtrl(pnlLeft, wxID_ANY, "Selected Plugin Path");
 	wxButton* btnProjDirBrowse = new wxButton(pnlLeft, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	btnProjDirBrowse->SetToolTip("Browse");
+	szrProjDir->Add(lblProjDir, 0, wxLeft, 5);
 	szrProjDir->Add(txtProjDir, 1, wxEXPAND);
 	szrProjDir->Add(btnProjDirBrowse, 0, wxLeft, 5);
 	
 	wxStaticText* lblPlugins = new wxStaticText(pnlLeft, wxID_ANY, "Plugins:");
 	lbxPlugins = new wxListBox(pnlLeft, wxID_ANY);
 	wxButton* btnAddPlugin = new wxButton(pnlLeft, wxID_ANY, "Add plugin...");
+
+	// Disable text controls
+	txtProjDir->SetEditable(false);
 
 	szrLeft->Add(szrProjDir, 0, wxALL | wxEXPAND, 5);
 	szrLeft->Add(lblPlugins, 0, wxALL, 5);
@@ -37,8 +44,11 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	wxButton* btnUpdateDLL = new wxButton(pnlRight, wxID_ANY, "Update Plugin");
 
 	wxBoxSizer* szrPluginsDir = new wxBoxSizer(wxHORIZONTAL);
+	wxStaticText* lblPluginsDir = new wxStaticText(pnlRight, wxID_ANY, "Plugins Folder:");
 	txtPluginsDir = new wxTextCtrl(pnlRight, wxID_ANY, "Plugins Directory");
 	wxButton* btnPluginsDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	btnPluginsDirBrowse->SetToolTip("Browse");
+	szrPluginsDir->Add(lblPluginsDir, 0, wxLeft, 5);
 	szrPluginsDir->Add(txtPluginsDir, 1, wxEXPAND);
 	szrPluginsDir->Add(btnPluginsDirBrowse, 0, wxLeft, 5);
 	
@@ -48,14 +58,21 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	lblServerStatus = new wxStaticText(pnlRight, wxID_ANY, STATUS_SRV_OFF);
 
 	wxBoxSizer* szrServerDir = new wxBoxSizer(wxHORIZONTAL);
+	wxStaticText* lblServerDir = new wxStaticText(pnlRight, wxID_ANY, "Server Folder:");
 	txtServerDir = new wxTextCtrl(pnlRight, wxID_ANY, "Server Directory");
 	wxButton* btnServerDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	btnServerDirBrowse->SetToolTip("Browse");
+	szrServerDir->Add(lblServerDir, 0, wxLeft, 5);
 	szrServerDir->Add(txtServerDir, 1, wxEXPAND);
 	szrServerDir->Add(btnServerDirBrowse, 0, wxLeft, 5);
 	
 	wxButton* btnStart = new wxButton(pnlRight, wxID_ANY, "Start");
 	wxButton* btnStop = new wxButton(pnlRight, wxID_ANY, "Stop");
 	wxButton* btnRestart = new wxButton(pnlRight, wxID_ANY, "Restart");
+
+	// Disable text controls
+	txtPluginsDir->SetEditable(false);
+	txtServerDir->SetEditable(false);
 
 	szrRight->Add(btnOpenProj, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnBuildDLL, 0, wxALL | wxEXPAND, 5);
@@ -109,30 +126,16 @@ void ManagerFrame::OnAddPlugin(wxCommandEvent& ev) {
 }
 
 void ManagerFrame::OnSetServerDir(wxCommandEvent& ev) {
-	wxDirDialog dialog(this, "Select Server Directory");
+	GetDir("Select Server Directory", serverDir, txtServerDir);
 
-	if (dialog.ShowModal() == wxID_OK) {
-		serverDir = dialog.GetPath();
-		txtServerDir->SetValue(serverDir);
-	}
 }
 
 void ManagerFrame::OnSetPluginsDir(wxCommandEvent& ev) {
-	wxDirDialog dialog(this, "Select Plugins Directory");
-
-	if (dialog.ShowModal() == wxID_OK) {
-		pluginsDir = dialog.GetPath();
-		txtPluginsDir->SetValue(pluginsDir);
-	}
+	GetDir("Select Plugins Directory", pluginsDir, txtPluginsDir);
 }
 
 void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
-	wxDirDialog dialog(this, "Select Project Directory");
-
-	if (dialog.ShowModal() == wxID_OK) {
-		projDir = dialog.GetPath();
-		txtProjDir->SetValue(projDir);
-	}
+	GetDir("Select Project Directory", projDir, txtProjDir);
 }
 
 void ManagerFrame::OnStartServer(wxCommandEvent& ev) {
@@ -188,4 +191,18 @@ void ManagerFrame::SaveConfig() {
 		for (size_t i = 0; i < lbxPlugins->GetCount(); i++)
 			fi << lbxPlugins->GetString(i).ToStdString() << "\n";
 	}
+}
+
+wxStandardID ManagerFrame::GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl) {
+	wxDirDialog dialog(this, title);
+
+	wxStandardID resp = (wxStandardID) dialog.ShowModal();
+
+	if (resp == wxID_OK) {
+		dir = dialog.GetPath();
+		ctrl->SetValue(dir);
+		ctrl->SetToolTip(dir);
+	}
+
+	return resp;
 }
