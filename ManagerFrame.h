@@ -4,9 +4,12 @@
 #include "macros.h"
 #include <wx/wx.h>
 #include <wx/listbox.h>
+#include <wx/editlbox.h>
+#include <wx/listctrl.h>
 #include <wx/stattext.h>
 #include <wx/dirdlg.h>
 #include <wx/filedlg.h>
+#include <unordered_map>
 #include <filesystem>
 #include <fstream>
 
@@ -17,6 +20,7 @@ public:
 	~ManagerFrame();
 private:
 	// Dynamic Elements
+	wxEditableListBox* elbPlugins;
 	wxListBox* lbxPlugins;
 	wxTextCtrl* txtServerDir;
 	wxTextCtrl* txtPluginsDir;
@@ -30,8 +34,15 @@ private:
 	wxString pluginsDir;
 	wxString projDir;
 
+	// Plugin map
+	std::unordered_map<std::string, std::string> plugins;
+
 	// Event Handlers
-	void OnAddPlugin(wxCommandEvent& ev);
+	void OnPluginAdded(wxListEvent& ev);
+	void OnPluginRemoved(wxListEvent& ev);
+	void OnPluginSelected(wxListEvent& ev);
+	void OnPluginRenamed(wxListEvent& ev);
+
 	void OnSetServerDir(wxCommandEvent& ev);
 	void OnSetPluginsDir(wxCommandEvent& ev);
 	void OnSetProjDir(wxCommandEvent& ev);
@@ -49,6 +60,8 @@ private:
 
 	// Extras
 	wxStandardID GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl);
+	wxString GetListItem(size_t index);
+	wxString GetLastListItem();
 };
 
 #endif // MANAGER_FRAME_H

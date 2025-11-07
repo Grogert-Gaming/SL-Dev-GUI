@@ -1,7 +1,7 @@
 #include "ManagerFrame.h"
 
 ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
-	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(700, 600), 
+	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 415), 
 	wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX) {
 	// Initialize panel and box model
 	wxPanel* pnlMain = new wxPanel(this);
@@ -20,17 +20,13 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrProjDir->Add(txtProjDir, 1, wxEXPAND);
 	szrProjDir->Add(btnProjDirBrowse, 0, wxLeft, 5);
 	
-	wxStaticText* lblPlugins = new wxStaticText(pnlLeft, wxID_ANY, "Plugins:");
-	lbxPlugins = new wxListBox(pnlLeft, wxID_ANY);
-	wxButton* btnAddPlugin = new wxButton(pnlLeft, wxID_ANY, "Add plugin...");
+	elbPlugins = new wxEditableListBox(pnlLeft, wxID_ANY, "Plugins");
 
 	// Disable text controls
 	txtProjDir->SetEditable(false);
 
 	szrLeft->Add(szrProjDir, 0, wxALL | wxEXPAND, 5);
-	szrLeft->Add(lblPlugins, 0, wxALL, 5);
-	szrLeft->Add(lbxPlugins, 1, wxALL | wxEXPAND, 5);
-	szrLeft->Add(btnAddPlugin, 0, wxALL | wxEXPAND, 5);
+	szrLeft->Add(elbPlugins, 1, wxALL | wxEXPAND, 5);
 
 	pnlLeft->SetSizer(szrLeft);
 	szrMain->Add(pnlLeft, 1, wxEXPAND | wxALL, 5);
@@ -95,10 +91,15 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	pnlMain->SetSizer(szrMain);
 
 	// Bind Event Handlers
-	btnAddPlugin->Bind(wxEVT_BUTTON, &ManagerFrame::OnAddPlugin, this);
+	elbPlugins->Bind(wxEVT_LIST_ITEM_SELECTED, &ManagerFrame::OnPluginSelected, this);
+	elbPlugins->Bind(wxEVT_LIST_DELETE_ITEM, &ManagerFrame::OnPluginRemoved, this);
+	elbPlugins->Bind(wxEVT_LIST_INSERT_ITEM, &ManagerFrame::OnPluginAdded, this);
+	elbPlugins->Bind(wxEVT_LIST_END_LABEL_EDIT, &ManagerFrame::OnPluginRenamed, this);
+
 	btnServerDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetServerDir, this);
 	btnPluginsDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetPluginsDir, this);
 	btnProjDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetProjDir, this);
+
 	btnStart->Bind(wxEVT_BUTTON, &ManagerFrame::OnStartServer, this);
 	btnStop->Bind(wxEVT_BUTTON, &ManagerFrame::OnStopServer, this);
 	btnRestart->Bind(wxEVT_BUTTON, &ManagerFrame::OnRestartServer, this);
@@ -115,14 +116,42 @@ ManagerFrame::~ManagerFrame() {
 	//SaveConfig();
 }
 
-void ManagerFrame::OnAddPlugin(wxCommandEvent& ev) {
-	wxTextEntryDialog dialog(this, "Enter plugin name:", "Add Plugin");
+void ManagerFrame::OnPluginAdded(wxListEvent& ev) {
+	ev.Skip();
 
-	if (dialog.ShowModal() == wxID_OK) {
-		wxString pluginName = dialog.GetValue();
-		if (!pluginName.IsEmpty())
-			lbxPlugins->Append(pluginName);
-	}
+	// Make sure the item was added before mapping
+	CallAfter([this]() {
+
+	});
+}
+
+void ManagerFrame::OnPluginRemoved(wxListEvent& ev) {
+	ev.Skip();
+
+	// Make sure the item was removed before mapping
+	CallAfter([this]() {
+
+	});
+}
+
+void ManagerFrame::OnPluginSelected(wxListEvent& ev) {
+	ev.Skip();
+
+	// Make sure the item was selected before checking the map
+	CallAfter([this]() {
+
+	});
+}
+
+void ManagerFrame::OnPluginRenamed(wxListEvent& ev) {
+	// Can we use the index or do we have to use the old name?
+	// ^ to update the map
+	ev.Skip();
+
+	// Make sure the item was updated before updating the map
+	CallAfter([this]() {
+
+	});
 }
 
 void ManagerFrame::OnSetServerDir(wxCommandEvent& ev) {
@@ -205,4 +234,24 @@ wxStandardID ManagerFrame::GetDir(std::string title, wxString& dir, wxTextCtrl*&
 	}
 
 	return resp;
+}
+
+wxString ManagerFrame::GetListItem(size_t index) {
+	wxArrayString items;
+
+	elbPlugins->GetStrings(items);
+
+	if (items.IsEmpty() || index > items.GetCount()) return wxEmptyString;
+	
+	return items[index];
+}
+
+wxString ManagerFrame::GetLastListItem() {
+	wxArrayString items;
+
+	elbPlugins->GetStrings(items);
+
+	if (items.IsEmpty()) return wxEmptyString;
+
+	return items.Last();
 }
