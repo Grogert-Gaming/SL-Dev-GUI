@@ -35,7 +35,7 @@ private:
 	wxString projDir;
 
 	// Plugin map
-	std::unordered_map<std::string, std::string> plugins;
+	std::unordered_map<wxString, wxString> plugins;
 
 	// Event Handlers
 	void OnPluginAdded(wxListEvent& ev);

@@ -13,7 +13,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 
 	wxBoxSizer* szrProjDir = new wxBoxSizer(wxHORIZONTAL);
 	wxStaticText* lblProjDir = new wxStaticText(pnlLeft, wxID_ANY, "Plugin Path:");
-	txtProjDir = new wxTextCtrl(pnlLeft, wxID_ANY, "Selected Plugin Path");
+	txtProjDir = new wxTextCtrl(pnlLeft, wxID_ANY, TXT_PROJ_PLACEHOLDER);
 	wxButton* btnProjDirBrowse = new wxButton(pnlLeft, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
 	btnProjDirBrowse->SetToolTip("Browse");
 	szrProjDir->Add(lblProjDir, 0, wxLeft, 5);
@@ -117,12 +117,8 @@ ManagerFrame::~ManagerFrame() {
 }
 
 void ManagerFrame::OnPluginAdded(wxListEvent& ev) {
+	// All new events handled in plugin renamed due to missing text in the event item
 	ev.Skip();
-
-	// Make sure the item was added before mapping
-	CallAfter([this]() {
-
-	});
 }
 
 void ManagerFrame::OnPluginRemoved(wxListEvent& ev) {
@@ -130,7 +126,7 @@ void ManagerFrame::OnPluginRemoved(wxListEvent& ev) {
 
 	// Make sure the item was removed before mapping
 	CallAfter([this]() {
-
+		plugins.erase(selectedPlugin);
 	});
 }
 
@@ -138,25 +134,69 @@ void ManagerFrame::OnPluginSelected(wxListEvent& ev) {
 	ev.Skip();
 
 	// Make sure the item was selected before checking the map
-	CallAfter([this]() {
+	CallAfter([this, ev]() {
+		selectedPlugin = ev.GetItem().GetText();
 
+		// User is adding a new plugin
+		if (selectedPlugin == wxEmptyString) {
+			txtProjDir->SetValue(TXT_PROJ_PLACEHOLDER);
+			return;
+		}
+
+		projDir = plugins[selectedPlugin];
+		// Ensure that the projDir does not get set as an empty string
+		projDir = projDir == wxEmptyString? TXT_PROJ_PLACEHOLDER : projDir;
+
+		txtProjDir->SetValue(projDir);
+		txtProjDir->SetToolTip(projDir == TXT_PROJ_PLACEHOLDER? "" : projDir);
 	});
 }
 
 void ManagerFrame::OnPluginRenamed(wxListEvent& ev) {
-	// Can we use the index or do we have to use the old name?
-	// ^ to update the map
+	wxString name = ev.GetItem().GetText();
+	name.Trim();
+
+	// Selected plugin should call first, updating the selected plugin
+	// If the user is selecting an empty string, they are likely adding 
+	if (name == wxEmptyString) {
+		wxMessageBox("OnPluginRenamed(): Cannot enter an empty string (" + name + ")");
+		ev.Veto();
+		return;
+	}
+
+	// No change was made
+	if (name == selectedPlugin) {
+		ev.Veto();
+		return;
+	}
+
+	// The user renamed to an existing name
+	if (plugins.find(name) != plugins.end()) {
+		wxMessageBox("OnPluginRenamed(): Cannot have two items with the same name (" + name + ")");
+		ev.Veto();
+		return;
+	}
+
+	// Item is currently being added to the list
+	if (selectedPlugin == wxEmptyString) {
+		plugins[name];
+	} else {
+		plugins.erase(selectedPlugin);
+		plugins[name] = projDir;
+	}
+
+	selectedPlugin = name;
+
 	ev.Skip();
-
-	// Make sure the item was updated before updating the map
-	CallAfter([this]() {
-
-	});
+	// !!!! Ignore beneath, it is probably wrong !!!!
+	// Event name is wxEVT_LIST_END_LABEL_EDIT
+	// Does not fire wxEVT_LIST_ITEM_SELECTED before or after a rename event
+	//		^ Unless the user is adding a new item, in which case it fires before
+	// Fires after wxEVT_LIST_INSERT_ITEM
 }
 
 void ManagerFrame::OnSetServerDir(wxCommandEvent& ev) {
 	GetDir("Select Server Directory", serverDir, txtServerDir);
-
 }
 
 void ManagerFrame::OnSetPluginsDir(wxCommandEvent& ev) {
@@ -165,6 +205,7 @@ void ManagerFrame::OnSetPluginsDir(wxCommandEvent& ev) {
 
 void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
 	GetDir("Select Project Directory", projDir, txtProjDir);
+	plugins[selectedPlugin] = projDir;
 }
 
 void ManagerFrame::OnStartServer(wxCommandEvent& ev) {
