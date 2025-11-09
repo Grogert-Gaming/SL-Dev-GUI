@@ -21,7 +21,6 @@ public:
 private:
 	// Dynamic Elements
 	wxEditableListBox* elbPlugins;
-	wxListBox* lbxPlugins;
 	wxTextCtrl* txtServerDir;
 	wxTextCtrl* txtPluginsDir;
 	wxTextCtrl* txtProjDir;

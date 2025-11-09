@@ -108,12 +108,12 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	btnUpdateDLL->Bind(wxEVT_BUTTON, &ManagerFrame::OnUpdateDLL, this);
 
 	// Load last config
-	//LoadConfig();
+	LoadConfig();
 }
 
 ManagerFrame::~ManagerFrame() {
-	// Save current config
-	//SaveConfig();
+	// Save the current config
+	SaveConfig();
 }
 
 void ManagerFrame::OnPluginAdded(wxListEvent& ev) {
@@ -235,32 +235,59 @@ void ManagerFrame::OnUpdateDLL(wxCommandEvent& ev) {
 void ManagerFrame::LoadConfig() {
 	std::ifstream fi(SAVE_FILE);
 	
-	if (fi.is_open()) {
-		std::string li;
-		if (std::getline(fi, li)) serverDir = wxString(li);
-		if (std::getline(fi, li)) pluginsDir = wxString(li);
-		if (std::getline(fi, li)) projDir = wxString(li);
+	if (!fi.is_open()) return;
 
-		while (std::getline(fi, li))
-			if (!li.empty()) lbxPlugins->Append(wxString(li));
+	std::string li;
 
-		if (serverDir.IsEmpty()) txtServerDir->SetValue(serverDir);
-		if (pluginsDir.IsEmpty()) txtPluginsDir->SetValue(pluginsDir);
-		if (projDir.IsEmpty()) txtProjDir->SetValue(projDir);
+	// Server Directory
+	if (std::getline(fi, li) && li.empty()) {
+		serverDir = wxString(li);
+		txtServerDir->SetValue(serverDir);
+		txtServerDir->SetToolTip(serverDir);
 	}
+
+	// Plugins Directory
+	if (std::getline(fi, li) && li.empty()) {
+		pluginsDir = wxString(li);
+		txtPluginsDir->SetValue(pluginsDir);
+		txtPluginsDir->SetToolTip(pluginsDir);
+	}
+
+	wxArrayString pluginNames;
+
+	// Load plugins map (name|dir)
+	while (std::getline(fi, li)) {
+		if (li.empty()) continue;
+
+		size_t delimPos = li.find('|');
+		
+		if (delimPos == std::string::npos) continue;
+
+		wxString name = wxString(li.substr(0, delimPos));
+		wxString dir = wxString(li.substr(delimPos + 1));
+
+		plugins[name] = dir;
+		pluginNames.Add(name);
+	}
+
+	if (!pluginNames.IsEmpty()) 
+		elbPlugins->SetStrings(pluginNames);
+
+	fi.close();
 }
 
 void ManagerFrame::SaveConfig() {
-	std::ofstream fi(SAVE_FILE);
+	std::ofstream fo(SAVE_FILE);
 	
-	if (fi.is_open()) {
-		fi << serverDir.ToStdString() << "\n";
-		fi << pluginsDir.ToStdString() << "\n";
-		fi << projDir.ToStdString() << "\n";
+	fo << serverDir.ToStdString() << "\n";
+	fo << pluginsDir.ToStdString() << "\n";
 
-		for (size_t i = 0; i < lbxPlugins->GetCount(); i++)
-			fi << lbxPlugins->GetString(i).ToStdString() << "\n";
+	for (const auto& plugin : plugins) {
+		// null byte, should work across platforms as a delimeter
+		fo << plugin.first.ToStdString() << "|" << plugin.second.ToStdString() << "\n";
 	}
+
+	fo.close();
 }
 
 wxStandardID ManagerFrame::GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl) {
