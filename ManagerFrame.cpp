@@ -41,7 +41,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 
 	wxBoxSizer* szrPluginsDir = new wxBoxSizer(wxHORIZONTAL);
 	wxStaticText* lblPluginsDir = new wxStaticText(pnlRight, wxID_ANY, "Plugins Folder:");
-	txtPluginsDir = new wxTextCtrl(pnlRight, wxID_ANY, "Plugins Directory");
+	txtPluginsDir = new wxTextCtrl(pnlRight, wxID_ANY, TXT_PLUGINS_PLACEHOLDER);
 	wxButton* btnPluginsDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
 	btnPluginsDirBrowse->SetToolTip("Browse");
 	szrPluginsDir->Add(lblPluginsDir, 0, wxLeft, 5);
@@ -55,7 +55,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 
 	wxBoxSizer* szrServerDir = new wxBoxSizer(wxHORIZONTAL);
 	wxStaticText* lblServerDir = new wxStaticText(pnlRight, wxID_ANY, "Server Folder:");
-	txtServerDir = new wxTextCtrl(pnlRight, wxID_ANY, "Server Directory");
+	txtServerDir = new wxTextCtrl(pnlRight, wxID_ANY, TXT_SRV_PLACEHOLDER);
 	wxButton* btnServerDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
 	btnServerDirBrowse->SetToolTip("Browse");
 	szrServerDir->Add(lblServerDir, 0, wxLeft, 5);
@@ -204,6 +204,11 @@ void ManagerFrame::OnSetPluginsDir(wxCommandEvent& ev) {
 }
 
 void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
+	if (selectedPlugin == wxEmptyString) {
+		wxMessageBox("Must select a plugin before adding a project path!");
+		return;
+	}
+
 	GetDir("Select Project Directory", projDir, txtProjDir);
 	plugins[selectedPlugin] = projDir;
 }
@@ -240,18 +245,16 @@ void ManagerFrame::LoadConfig() {
 	std::string li;
 
 	// Server Directory
-	if (std::getline(fi, li) && li.empty()) {
-		serverDir = wxString(li);
-		txtServerDir->SetValue(serverDir);
-		txtServerDir->SetToolTip(serverDir);
-	}
+	std::getline(fi, li);
+	serverDir = li;
+	txtServerDir->SetValue(li.empty()? TXT_SRV_PLACEHOLDER : li);
+	txtServerDir->SetToolTip(serverDir);
 
 	// Plugins Directory
-	if (std::getline(fi, li) && li.empty()) {
-		pluginsDir = wxString(li);
-		txtPluginsDir->SetValue(pluginsDir);
-		txtPluginsDir->SetToolTip(pluginsDir);
-	}
+	std::getline(fi, li);
+	pluginsDir = li;
+	txtPluginsDir->SetValue(li.empty()? TXT_SRV_PLACEHOLDER : li);
+	txtPluginsDir->SetToolTip(pluginsDir);
 
 	wxArrayString pluginNames;
 
@@ -283,7 +286,7 @@ void ManagerFrame::SaveConfig() {
 	fo << pluginsDir.ToStdString() << "\n";
 
 	for (const auto& plugin : plugins) {
-		// null byte, should work across platforms as a delimeter
+		// delimeter may not work cross-platform
 		fo << plugin.first.ToStdString() << "|" << plugin.second.ToStdString() << "\n";
 	}
 
