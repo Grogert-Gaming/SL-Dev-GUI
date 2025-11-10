@@ -1,7 +1,7 @@
 #include "ManagerFrame.h"
 
 ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
-	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 415), 
+	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 450), 
 	wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX) {
 	// Initialize panel and box model
 	wxPanel* pnlMain = new wxPanel(this);
@@ -19,6 +19,8 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrProjDir->Add(lblProjDir, 0, wxLeft, 5);
 	szrProjDir->Add(txtProjDir, 1, wxEXPAND);
 	szrProjDir->Add(btnProjDirBrowse, 0, wxLeft, 5);
+
+	wxButton* btnProjDirOpen = new wxButton(pnlLeft, wxID_ANY, "Project Folder");
 	
 	elbPlugins = new wxEditableListBox(pnlLeft, wxID_ANY, "Plugins");
 
@@ -26,6 +28,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	txtProjDir->SetEditable(false);
 
 	szrLeft->Add(szrProjDir, 0, wxALL | wxEXPAND, 5);
+	szrLeft->Add(btnProjDirOpen, 0, wxALL | wxEXPAND, 5);
 	szrLeft->Add(elbPlugins, 1, wxALL | wxEXPAND, 5);
 
 	pnlLeft->SetSizer(szrLeft);
@@ -38,6 +41,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	wxButton* btnOpenProj = new wxButton(pnlRight, wxID_ANY, "Open Project");
 	wxButton* btnBuildDLL = new wxButton(pnlRight, wxID_ANY, "Build Plugin");
 	wxButton* btnUpdateDLL = new wxButton(pnlRight, wxID_ANY, "Update Plugin");
+	wxButton* btnPluginsDirOpen = new wxButton(pnlRight, wxID_ANY, "Open Plugins Folder");
 
 	wxBoxSizer* szrPluginsDir = new wxBoxSizer(wxHORIZONTAL);
 	wxStaticText* lblPluginsDir = new wxStaticText(pnlRight, wxID_ANY, "Plugins Folder:");
@@ -61,9 +65,15 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrServerDir->Add(lblServerDir, 0, wxLeft, 5);
 	szrServerDir->Add(txtServerDir, 1, wxEXPAND);
 	szrServerDir->Add(btnServerDirBrowse, 0, wxLeft, 5);
+
+	wxButton* btnServerDirOpen = new wxButton(pnlRight, wxID_ANY, "Open Server Folder");
 	
+	wxBoxSizer* szrServerControls = new wxBoxSizer(wxHORIZONTAL);
 	wxButton* btnStart = new wxButton(pnlRight, wxID_ANY, "Start");
 	wxButton* btnStop = new wxButton(pnlRight, wxID_ANY, "Stop");
+	szrServerControls->Add(btnStart, 1, wxEXPAND);
+	szrServerControls->Add(btnStop, 1, wxEXPAND);
+
 	wxButton* btnRestart = new wxButton(pnlRight, wxID_ANY, "Restart");
 
 	// Disable text controls
@@ -73,6 +83,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrRight->Add(btnOpenProj, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnBuildDLL, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnUpdateDLL, 0, wxALL | wxEXPAND, 5);
+	szrRight->Add(btnPluginsDirOpen, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(szrPluginsDir, 0, wxALL | wxEXPAND, 5);
 
 	szrRight->Add(lblBuildStatus_0, 0, wxALL | wxEXPAND, 5);
@@ -81,8 +92,8 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrRight->Add(lblServerStatus, 0, wxALL | wxEXPAND, 5);
 
 	szrRight->Add(szrServerDir, 0, wxALL | wxEXPAND, 5);
-	szrRight->Add(btnStart, 0, wxALL | wxEXPAND, 5);
-	szrRight->Add(btnStop, 0, wxALL | wxEXPAND, 5);
+	szrRight->Add(btnServerDirOpen, 0, wxALL | wxEXPAND, 5);
+	szrRight->Add(szrServerControls, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnRestart, 0, wxALL | wxEXPAND, 5);
 
 	pnlRight->SetSizer(szrRight);
@@ -99,6 +110,10 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	btnServerDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetServerDir, this);
 	btnPluginsDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetPluginsDir, this);
 	btnProjDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetProjDir, this);
+
+	btnServerDirOpen->Bind(wxEVT_BUTTON, &ManagerFrame::OnOpenServerDir, this);
+	btnPluginsDirOpen->Bind(wxEVT_BUTTON, &ManagerFrame::OnOpenPluginsDir, this);
+	btnProjDirOpen->Bind(wxEVT_BUTTON, &ManagerFrame::OnOpenProjDir, this);
 
 	btnStart->Bind(wxEVT_BUTTON, &ManagerFrame::OnStartServer, this);
 	btnStop->Bind(wxEVT_BUTTON, &ManagerFrame::OnStopServer, this);
@@ -213,28 +228,81 @@ void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
 	plugins[selectedPlugin] = projDir;
 }
 
-void ManagerFrame::OnStartServer(wxCommandEvent& ev) {
+void ManagerFrame::OnOpenServerDir(wxCommandEvent& ev) {
+	if (serverDir.IsEmpty() || serverDir == TXT_SRV_PLACEHOLDER) {
+		wxMessageBox("Server directory is not set!");
+		return;
+	}
 
+	if (!wxDirExists(serverDir)) {
+		wxMessageBox("Server directory does not exist!");
+		return;
+	}
+
+	if (!wxLaunchDefaultApplication(serverDir)) {
+		wxMessageBox("Failed to open server directory!");
+	}
+}
+
+void ManagerFrame::OnOpenPluginsDir(wxCommandEvent& ev) {
+	if (pluginsDir.IsEmpty() || pluginsDir == TXT_PLUGINS_PLACEHOLDER) {
+		wxMessageBox("Plugins directory is not set!");
+		return;
+	}
+
+	if (!wxDirExists(pluginsDir)) {
+		wxMessageBox("Plugins directory does not exist!");
+		return;
+	}
+
+	if (!wxLaunchDefaultApplication(pluginsDir)) {
+		wxMessageBox("Failed to open plugins directory!");
+	}
+}
+
+void ManagerFrame::OnOpenProjDir(wxCommandEvent& ev) {
+	if (selectedPlugin.IsEmpty()) {
+		wxMessageBox("No plugin selected!");
+		return;
+	}
+
+	if (projDir.IsEmpty() || projDir == TXT_PROJ_PLACEHOLDER) {
+		wxMessageBox("Selected plugin does not have a project directory set!");
+		return;
+	}
+
+	if (!wxDirExists(projDir)) {
+		wxMessageBox("Selected project directory does not exist!");
+		return;
+	}
+
+	if (!wxLaunchDefaultApplication(projDir)) {
+		wxMessageBox("Failed to open project directory!");
+	}
+}
+
+void ManagerFrame::OnStartServer(wxCommandEvent& ev) {
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::OnStopServer(wxCommandEvent& ev) {
-
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::OnRestartServer(wxCommandEvent& ev) {
-
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::OnOpenProject(wxCommandEvent& ev) {
-
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::OnBuildDLL(wxCommandEvent& ev) {
-
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::OnUpdateDLL(wxCommandEvent& ev) {
-
+	wxMessageBox("Not yet implemented");
 }
 
 void ManagerFrame::LoadConfig() {

@@ -45,6 +45,10 @@ private:
 	void OnSetServerDir(wxCommandEvent& ev);
 	void OnSetPluginsDir(wxCommandEvent& ev);
 	void OnSetProjDir(wxCommandEvent& ev);
+
+	void OnOpenServerDir(wxCommandEvent& ev);
+	void OnOpenPluginsDir(wxCommandEvent& ev);
+	void OnOpenProjDir(wxCommandEvent& ev);
 	
 	void OnStartServer(wxCommandEvent& ev);
 	void OnStopServer(wxCommandEvent& ev);
