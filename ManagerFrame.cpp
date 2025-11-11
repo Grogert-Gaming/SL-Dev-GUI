@@ -1,7 +1,7 @@
 #include "ManagerFrame.h"
 
 ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
-	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 450), 
+	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 485), 
 	wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX) {
 	// Initialize panel and box model
 	wxPanel* pnlMain = new wxPanel(this);
@@ -11,21 +11,10 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	wxPanel* pnlLeft = new wxPanel(pnlMain);
 	wxBoxSizer* szrLeft = new wxBoxSizer(wxVERTICAL);
 
-	wxBoxSizer* szrProjDir = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* lblProjDir = new wxStaticText(pnlLeft, wxID_ANY, "Plugin Path:");
-	txtProjDir = new wxTextCtrl(pnlLeft, wxID_ANY, TXT_PROJ_PLACEHOLDER);
-	wxButton* btnProjDirBrowse = new wxButton(pnlLeft, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
-	btnProjDirBrowse->SetToolTip("Browse");
-	szrProjDir->Add(lblProjDir, 0, wxLeft, 5);
-	szrProjDir->Add(txtProjDir, 1, wxEXPAND);
-	szrProjDir->Add(btnProjDirBrowse, 0, wxLeft, 5);
-
+	wxBoxSizer* szrProjDir = MakeBrowseControl(pnlLeft, txtProjDir, &ManagerFrame::OnSetProjDir, "Plugin Folder:", TXT_PROJ_PLACEHOLDER);
 	wxButton* btnProjDirOpen = new wxButton(pnlLeft, wxID_ANY, "Project Folder");
 	
 	elbPlugins = new wxEditableListBox(pnlLeft, wxID_ANY, "Plugins");
-
-	// Disable text controls
-	txtProjDir->SetEditable(false);
 
 	szrLeft->Add(szrProjDir, 0, wxALL | wxEXPAND, 5);
 	szrLeft->Add(btnProjDirOpen, 0, wxALL | wxEXPAND, 5);
@@ -43,28 +32,15 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	wxButton* btnUpdateDLL = new wxButton(pnlRight, wxID_ANY, "Update Plugin");
 	wxButton* btnPluginsDirOpen = new wxButton(pnlRight, wxID_ANY, "Open Plugins Folder");
 
-	wxBoxSizer* szrPluginsDir = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* lblPluginsDir = new wxStaticText(pnlRight, wxID_ANY, "Plugins Folder:");
-	txtPluginsDir = new wxTextCtrl(pnlRight, wxID_ANY, TXT_PLUGINS_PLACEHOLDER);
-	wxButton* btnPluginsDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
-	btnPluginsDirBrowse->SetToolTip("Browse");
-	szrPluginsDir->Add(lblPluginsDir, 0, wxLeft, 5);
-	szrPluginsDir->Add(txtPluginsDir, 1, wxEXPAND);
-	szrPluginsDir->Add(btnPluginsDirBrowse, 0, wxLeft, 5);
+	wxBoxSizer* szrPluginsDir = MakeBrowseControl(pnlRight, txtPluginsDir, &ManagerFrame::OnSetPluginsDir, "Plugins Folder:", TXT_PLUGINS_PLACEHOLDER);
 	
 	wxStaticText* lblBuildStatus_0 = new wxStaticText(pnlRight, wxID_ANY, "Build Status:");
 	lblBuildStatus = new wxStaticText(pnlRight, wxID_ANY, STATUS_BUILD_NEVER);
 	wxStaticText* lblServerStatus_0 = new wxStaticText(pnlRight, wxID_ANY, "Server Status:");
 	lblServerStatus = new wxStaticText(pnlRight, wxID_ANY, STATUS_SRV_OFF);
 
-	wxBoxSizer* szrServerDir = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText* lblServerDir = new wxStaticText(pnlRight, wxID_ANY, "Server Folder:");
-	txtServerDir = new wxTextCtrl(pnlRight, wxID_ANY, TXT_SRV_PLACEHOLDER);
-	wxButton* btnServerDirBrowse = new wxButton(pnlRight, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
-	btnServerDirBrowse->SetToolTip("Browse");
-	szrServerDir->Add(lblServerDir, 0, wxLeft, 5);
-	szrServerDir->Add(txtServerDir, 1, wxEXPAND);
-	szrServerDir->Add(btnServerDirBrowse, 0, wxLeft, 5);
+	wxBoxSizer* szrServerDir = MakeBrowseControl(pnlRight, txtServerDir, &ManagerFrame::OnSetServerDir, "Server Folder:", TXT_SRV_PLACEHOLDER);
+	wxBoxSizer* szrServerExePath = MakeBrowseControl(pnlRight, txtServerExePath, &ManagerFrame::OnSetServerExePath, "Server Script:", TXT_EXE_PLACEHOLDER);
 
 	wxButton* btnServerDirOpen = new wxButton(pnlRight, wxID_ANY, "Open Server Folder");
 	
@@ -75,10 +51,6 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrServerControls->Add(btnStop, 1, wxEXPAND);
 
 	wxButton* btnRestart = new wxButton(pnlRight, wxID_ANY, "Restart");
-
-	// Disable text controls
-	txtPluginsDir->SetEditable(false);
-	txtServerDir->SetEditable(false);
 
 	szrRight->Add(btnOpenProj, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnBuildDLL, 0, wxALL | wxEXPAND, 5);
@@ -92,6 +64,7 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	szrRight->Add(lblServerStatus, 0, wxALL | wxEXPAND, 5);
 
 	szrRight->Add(szrServerDir, 0, wxALL | wxEXPAND, 5);
+	szrRight->Add(szrServerExePath, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnServerDirOpen, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(szrServerControls, 0, wxALL | wxEXPAND, 5);
 	szrRight->Add(btnRestart, 0, wxALL | wxEXPAND, 5);
@@ -106,10 +79,6 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	elbPlugins->Bind(wxEVT_LIST_DELETE_ITEM, &ManagerFrame::OnPluginRemoved, this);
 	elbPlugins->Bind(wxEVT_LIST_INSERT_ITEM, &ManagerFrame::OnPluginAdded, this);
 	elbPlugins->Bind(wxEVT_LIST_END_LABEL_EDIT, &ManagerFrame::OnPluginRenamed, this);
-
-	btnServerDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetServerDir, this);
-	btnPluginsDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetPluginsDir, this);
-	btnProjDirBrowse->Bind(wxEVT_BUTTON, &ManagerFrame::OnSetProjDir, this);
 
 	btnServerDirOpen->Bind(wxEVT_BUTTON, &ManagerFrame::OnOpenServerDir, this);
 	btnPluginsDirOpen->Bind(wxEVT_BUTTON, &ManagerFrame::OnOpenPluginsDir, this);
@@ -228,6 +197,10 @@ void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
 	plugins[selectedPlugin] = projDir;
 }
 
+void ManagerFrame::OnSetServerExePath(wxCommandEvent& ev) {
+	GetDir("Select Server Script", serverExePath, txtServerExePath);
+}
+
 void ManagerFrame::OnOpenServerDir(wxCommandEvent& ev) {
 	if (serverDir.IsEmpty() || serverDir == TXT_SRV_PLACEHOLDER) {
 		wxMessageBox("Server directory is not set!");
@@ -318,6 +291,12 @@ void ManagerFrame::LoadConfig() {
 	txtServerDir->SetValue(li.empty()? TXT_SRV_PLACEHOLDER : li);
 	txtServerDir->SetToolTip(serverDir);
 
+	// Server Script Path
+	std::getline(fi, li);
+	serverExePath = li;
+	txtServerExePath->SetValue(li.empty() ? TXT_EXE_PLACEHOLDER : li);
+	txtServerExePath->SetToolTip(serverExePath);
+
 	// Plugins Directory
 	std::getline(fi, li);
 	pluginsDir = li;
@@ -351,6 +330,7 @@ void ManagerFrame::SaveConfig() {
 	std::ofstream fo(SAVE_FILE);
 	
 	fo << serverDir.ToStdString() << "\n";
+	fo << serverExePath.ToStdString() << "\n";
 	fo << pluginsDir.ToStdString() << "\n";
 
 	for (const auto& plugin : plugins) {
@@ -393,4 +373,24 @@ wxString ManagerFrame::GetLastListItem() {
 	if (items.IsEmpty()) return wxEmptyString;
 
 	return items.Last();
+}
+
+wxBoxSizer* ManagerFrame::MakeBrowseControl(wxPanel*& panel, wxTextCtrl*& ctrlText, 
+		void (ManagerFrame::* method)(wxCommandEvent&), 
+		std::string label, std::string placeholder) {
+	wxBoxSizer* ctrlSizer = new wxBoxSizer(wxHORIZONTAL);
+	wxStaticText* ctrlLabel = new wxStaticText(panel, wxID_ANY, label);
+	ctrlText = new wxTextCtrl(panel, wxID_ANY, placeholder);
+	wxButton* ctrlBrowseBtn = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	
+	ctrlText->SetEditable(false);
+
+	ctrlBrowseBtn->SetToolTip("Browse");
+	ctrlSizer->Add(ctrlLabel, 0, wxLeft, 5);
+	ctrlSizer->Add(ctrlText, 1, wxEXPAND);
+	ctrlSizer->Add(ctrlBrowseBtn, 0, wxLeft, 5);
+
+	ctrlBrowseBtn->Bind(wxEVT_BUTTON, method, this);
+
+	return ctrlSizer;
 }

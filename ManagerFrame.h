@@ -22,6 +22,7 @@ private:
 	// Dynamic Elements
 	wxEditableListBox* elbPlugins;
 	wxTextCtrl* txtServerDir;
+	wxTextCtrl* txtServerExePath;
 	wxTextCtrl* txtPluginsDir;
 	wxTextCtrl* txtProjDir;
 	wxStaticText* lblServerStatus;
@@ -30,6 +31,7 @@ private:
 	// Element string values
 	wxString selectedPlugin;
 	wxString serverDir;
+	wxString serverExePath;
 	wxString pluginsDir;
 	wxString projDir;
 
@@ -45,6 +47,7 @@ private:
 	void OnSetServerDir(wxCommandEvent& ev);
 	void OnSetPluginsDir(wxCommandEvent& ev);
 	void OnSetProjDir(wxCommandEvent& ev);
+	void OnSetServerExePath(wxCommandEvent& ev);
 
 	void OnOpenServerDir(wxCommandEvent& ev);
 	void OnOpenPluginsDir(wxCommandEvent& ev);
@@ -65,6 +68,7 @@ private:
 	wxStandardID GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl);
 	wxString GetListItem(size_t index);
 	wxString GetLastListItem();
+	wxBoxSizer* MakeBrowseControl(wxPanel*& panel, wxTextCtrl*& textbox, void (ManagerFrame::* method)(wxCommandEvent&), std::string label, std::string placeholder);
 };
 
 #endif // MANAGER_FRAME_H

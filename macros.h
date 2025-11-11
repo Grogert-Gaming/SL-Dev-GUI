@@ -7,6 +7,7 @@
 #define TXT_PROJ_PLACEHOLDER	"Project folder not selected"
 #define TXT_PLUGINS_PLACEHOLDER	"Plugins folder not selected"
 #define TXT_SRV_PLACEHOLDER		"Server folder not selected"
+#define TXT_EXE_PLACEHOLDER		"Server script not selected"
 #define SAVE_FILE				"scpsl_local_dev_manager.txt"
 #define STATUS_BUILD_LAST		"Last Built "
 #define STATUS_BUILD_NEVER		STATUS_BUILD_LAST "never"
