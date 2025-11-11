@@ -198,7 +198,7 @@ void ManagerFrame::OnSetProjDir(wxCommandEvent& ev) {
 }
 
 void ManagerFrame::OnSetServerExePath(wxCommandEvent& ev) {
-	GetDir("Select Server Script", serverExePath, txtServerExePath);
+	GetFile("Select Server Script", serverExePath, txtServerExePath);
 }
 
 void ManagerFrame::OnOpenServerDir(wxCommandEvent& ev) {
@@ -350,6 +350,20 @@ wxStandardID ManagerFrame::GetDir(std::string title, wxString& dir, wxTextCtrl*&
 		dir = dialog.GetPath();
 		ctrl->SetValue(dir);
 		ctrl->SetToolTip(dir);
+	}
+
+	return resp;
+}
+
+wxStandardID ManagerFrame::GetFile(std::string title, wxString& path, wxTextCtrl*& ctrl) {
+	wxFileDialog dialog(this, title);
+
+	wxStandardID resp = (wxStandardID)dialog.ShowModal();
+
+	if (resp == wxID_OK) {
+		path = dialog.GetPath();
+		ctrl->SetValue(path);
+		ctrl->SetToolTip(path);
 	}
 
 	return resp;

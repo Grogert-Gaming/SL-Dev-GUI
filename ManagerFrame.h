@@ -66,6 +66,7 @@ private:
 
 	// Extras
 	wxStandardID GetDir(std::string title, wxString& dir, wxTextCtrl*& ctrl);
+	wxStandardID GetFile(std::string title, wxString& dir, wxTextCtrl*& ctrl);
 	wxString GetListItem(size_t index);
 	wxString GetLastListItem();
 	wxBoxSizer* MakeBrowseControl(wxPanel*& panel, wxTextCtrl*& textbox, void (ManagerFrame::* method)(wxCommandEvent&), std::string label, std::string placeholder);
