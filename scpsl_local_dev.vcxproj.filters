@@ -24,6 +24,9 @@
     <ClCompile Include="ManagerFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SystemManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="notes.md" />
@@ -33,6 +36,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,7 +2,7 @@
 #define MACROS_H
 
 // proj vers (X.X.X)
-#define PRJ_VERS "0.0.1"
+#define PRJ_VERS "0.1.0"
 
 #define TXT_PROJ_PLACEHOLDER	"Project folder not selected"
 #define TXT_PLUGINS_PLACEHOLDER	"Plugins folder not selected"
@@ -16,6 +16,6 @@
 #define STATUS_SRV_STOP			"Server stopping..."
 #define STATUS_SRV_OFF			"Server stopped..."
 #define STATUS_SRV_RESTART		"Server restarting..."
-#define STATUS_SRV_ERR			"Error. Check Logs."
+#define STATUS_ERR			"Error. Check Logs."
 
 #endif // MACROS_H

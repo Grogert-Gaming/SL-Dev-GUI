@@ -2,6 +2,7 @@
 #define MANAGER_FRAME_H
 
 #include "macros.h"
+#include "SystemManager.h"
 #include <wx/wx.h>
 #include <wx/listbox.h>
 #include <wx/editlbox.h>
@@ -37,6 +38,9 @@ private:
 
 	// Plugin map
 	std::unordered_map<wxString, wxString> plugins;
+
+	// Server operations
+	SystemManager* sysMan;
 
 	// Event Handlers
 	void OnPluginAdded(wxListEvent& ev);

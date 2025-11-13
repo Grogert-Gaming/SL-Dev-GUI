@@ -3,6 +3,9 @@
 ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 	"SCP:SL Development Pane v" PRJ_VERS, wxDefaultPosition, wxSize(650, 485), 
 	wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX) {
+	// System initialization
+	sysMan = new SystemManager();
+
 	// Initialize panel and box model
 	wxPanel* pnlMain = new wxPanel(this);
 	wxBoxSizer* szrMain = new wxBoxSizer(wxHORIZONTAL);
@@ -98,6 +101,9 @@ ManagerFrame::ManagerFrame() : wxFrame(nullptr, wxID_ANY,
 ManagerFrame::~ManagerFrame() {
 	// Save the current config
 	SaveConfig();
+
+	// Cleanup memory
+	delete sysMan;
 }
 
 void ManagerFrame::OnPluginAdded(wxListEvent& ev) {
@@ -256,26 +262,144 @@ void ManagerFrame::OnOpenProjDir(wxCommandEvent& ev) {
 
 void ManagerFrame::OnStartServer(wxCommandEvent& ev) {
 	wxMessageBox("Not yet implemented");
+	return;
+
+	if (sysMan->IsSrvRunning()) {
+		wxMessageBox("Server is already running");
+		return;
+	}
+
+	if (serverExePath.IsEmpty() || serverExePath == TXT_EXE_PLACEHOLDER) {
+		wxMessageBox("Server script is not yet set");
+		return;
+	}
+
+	if (!wxFileExists(serverExePath)) {
+		wxMessageBox("Server script does not exist");
+		return;
+	}
+
+	lblServerStatus->SetLabel(STATUS_SRV_START);
+
+	if (!sysMan->Start(serverExePath)) {
+		lblServerStatus->SetLabel(STATUS_ERR);
+		wxMessageBox("Failed to start server");
+	} else {
+		lblServerStatus->SetLabel(STATUS_SRV_RUN);
+	}
 }
 
 void ManagerFrame::OnStopServer(wxCommandEvent& ev) {
 	wxMessageBox("Not yet implemented");
+	return;
+
+	if (!sysMan->IsSrvRunning()) {
+		wxMessageBox("Server is not running");
+		return;
+	}
+
+	lblServerStatus->SetLabel(STATUS_SRV_STOP);
+
+	if (!sysMan->Stop()) {
+		lblServerStatus->SetLabel(STATUS_ERR);
+		wxMessageBox("Failed to stop server");
+	} else {
+		lblServerStatus->SetLabel(STATUS_SRV_OFF);
+	}
 }
 
 void ManagerFrame::OnRestartServer(wxCommandEvent& ev) {
 	wxMessageBox("Not yet implemented");
+	return;
+
+	if (!sysMan->IsSrvRunning()) {
+		wxMessageBox("Server is not running");
+		return;
+	}
+
+	lblServerStatus->SetLabel(STATUS_SRV_RESTART);
+
+	if (!sysMan->Restart()) {
+		lblServerStatus->SetLabel(STATUS_ERR);
+		wxMessageBox("Failed to restart server");
+	} else {
+		lblServerStatus->SetLabel(STATUS_SRV_RUN);
+	}
 }
 
 void ManagerFrame::OnOpenProject(wxCommandEvent& ev) {
-	wxMessageBox("Not yet implemented");
+	if (selectedPlugin.IsEmpty()) {
+		wxMessageBox("No plugin selected");
+		return;
+	}
+
+	if (projDir.IsEmpty() || projDir == TXT_PROJ_PLACEHOLDER) {
+		wxMessageBox("Selected plugin does not have a project folder set");
+		return;
+	}
+
+	if (!wxDirExists(projDir)) {
+		wxMessageBox("Selected plugin folder does not exist");
+		return;
+	}
+
+	if (!sysMan->OpenProject(projDir)) {
+		wxMessageBox("No solution (.sln) or project (.csproj) file found in \"" + projDir + "\".");
+	}
 }
 
 void ManagerFrame::OnBuildDLL(wxCommandEvent& ev) {
-	wxMessageBox("Not yet implemented");
+	if (selectedPlugin.IsEmpty()) {
+		wxMessageBox("No plugin selected");
+		return;
+	}
+
+	if (projDir.IsEmpty() || projDir == TXT_PROJ_PLACEHOLDER) {
+		wxMessageBox("Selected plugin does not have a project folder set");
+		return;
+	}
+
+	if (!wxDirExists(projDir)) {
+		wxMessageBox("Selected plugin folder does not exist");
+		return;
+	}
+
+	wxMessageBox("Building plugin");
+
+	wxString buildTime, errMsg;
+
+	if (sysMan->BuildDLL(projDir, buildTime, errMsg)) {
+		lblBuildStatus->SetLabel(STATUS_BUILD_LAST + buildTime);
+		wxMessageBox("Build completed");
+	} else {
+		lblBuildStatus->SetLabel(STATUS_ERR);
+		wxMessageBox(errMsg);
+	}
 }
 
 void ManagerFrame::OnUpdateDLL(wxCommandEvent& ev) {
-	wxMessageBox("Not yet implemented");
+	if (selectedPlugin.IsEmpty()) {
+		wxMessageBox("No plugin selected");
+		return;
+	}
+
+	if (projDir.IsEmpty() || projDir == TXT_PROJ_PLACEHOLDER) {
+		wxMessageBox("Selected plugin does not have a project folder set");
+		return;
+	}
+
+	if (pluginsDir.IsEmpty() || pluginsDir == TXT_PLUGINS_PLACEHOLDER) {
+		wxMessageBox("Plugins folder is not set");
+		return;
+	}
+
+	wxString errMsg;
+
+	if (sysMan->UpdateDLL(projDir, pluginsDir, selectedPlugin, errMsg)) {
+		wxMessageBox("Plugin updated");
+	} else {
+		wxMessageBox(errMsg);
+	}
 }
 
 void ManagerFrame::LoadConfig() {
